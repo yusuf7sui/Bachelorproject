@@ -1,13 +1,18 @@
+from genetic_algorithm import random_initial_population, selection, crossover
 
-def run_genetic_algorithm():
-    # first need an initial_population
+import dataset as dt
 
-    # select parent with selection operators
+def run_genetic_algorithm(generations: int, pop_size: int, activities: list = dt.base_data):
+    parents_pop = random_initial_population(pop_size, activities)
 
-    # do crossover-operation
+    for generation in generations:
+        # select parent with selection operators
 
-    # replace old population with new population
+        # do crossover-operation
 
-    # until a convergence or maximum of generations
+        # replace old population with new population
+
+        # until a convergence or maximum of generations
+        pass
 
     pass
