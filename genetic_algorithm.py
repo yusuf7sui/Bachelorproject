@@ -44,11 +44,52 @@ def crossover(kind_of_crossover: str):
     else:
         uniform_crossover()
 
-def one_point_crossover():
-    pass
 
-def uniform_crossover():
-    pass
+
+def one_point_crossover(father: list, mother: list):
+    child1 = []
+    child2 = []
+
+    # adjust the point where crosspoint will be
+    crosspoint = rnd.randint(1, len(father) - 1)
+
+    for gen in range(crosspoint):
+        child1.append(father[gen])
+        child2.append(mother[gen])
+
+    for gen in range(len(father)):
+        if child1.count(mother[gen]) == 0:
+            child1.append(mother[gen])
+        if child2.count(father[gen]) == 0:
+            child2.append(father[gen])
+    return child1, child2
+
+def uniform_crossover(father: list, mother: list):
+    child1 = []
+    child2 = []
+    uniform = []
+    for _ in range(len(father)):
+        uniform.append(rnd.randint(0, 1))
+    for bit in uniform:
+        if bit == 1:
+            for gene in father:
+                if gene not in child1:
+                    child1.append(gene)
+                    break
+            for gene in mother:
+                if gene not in child2:
+                    child2.append(gene)
+                    break
+        if bit == 0:
+            for gene in mother:
+                if gene not in child1:
+                    child1.append(gene)
+                    break
+            for gene in father:
+                if gene not in child2:
+                    child2.append(gene)
+                    break
+    return child1, child2
 
 def selection(kind_of_selection: str):
     if kind_of_selection == 'roulette':
