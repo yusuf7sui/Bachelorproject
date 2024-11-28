@@ -38,11 +38,11 @@ def sort_genes(tmp_chrom: list, activities: list):
     return sorted_chrom
 
 
-def crossover(kind_of_crossover: str):
-    if kind_of_crossover == 'one_point':
-        one_point_crossover()
+def crossover(kind_of_crossover: str, father: list, mother: list):
+    if kind_of_crossover == 'one-point-crossover':
+        return one_point_crossover(father, mother)
     else:
-        uniform_crossover()
+        return uniform_crossover(father, mother)
 
 
 
@@ -92,16 +92,65 @@ def uniform_crossover(father: list, mother: list):
     return child1, child2
 
 def selection(kind_of_selection: str, makespan_with_list: list):
-    if kind_of_selection == 'roulette':
-        roulette_selection(makespan_with_list)
+    if kind_of_selection == 'tournament-selection':
+        return tournament_selection(makespan_with_list)
     else:
-        tournament_selection(makespan_with_list)
-
-def roulette_selection(makespan_with_list: list):
-    pass
+        return roulette_selection(makespan_with_list)
 
 def tournament_selection(makespan_with_list: list):
-    pass
+    length = len(makespan_with_list) - 1
+    pool = []
+    for k in range((length + 1) // 2):
+        a = rnd.randint(0, length)
+        b = rnd.randint(0, length)
+        first_parent: list
+        if makespan_with_list[a][2] <= makespan_with_list[b][2]:
+            first_parent = makespan_with_list[a][1]
+        else:
+            first_parent = makespan_with_list[b][1]
+        c = rnd.randint(0, length)
+        d = rnd.randint(0, length)
+        while makespan_with_list[c][1] != makespan_with_list[d][1] != first_parent:
+            c = rnd.randint(0, length)
+            d = rnd.randint(0, length)
+        second_parent: list
+        if makespan_with_list[c][2] <= makespan_with_list[d][2]:
+            second_parent = makespan_with_list[c][1]
+        else:
+            second_parent = makespan_with_list[d][1]
+        pool.append((first_parent, second_parent))
+    return pool
+
+
+'''
+As like in tournament the same
+'''
+def roulette_selection(makespan_with_list: list):
+    lis2 = []
+    maximization_constant = 100
+    for item in makespan_with_list:
+        lis2.append(maximization_constant - item[2]) #2 because of the makespans
+    sum = 0
+    tup = []
+    cnt = 0
+    first_parent: list
+    second_parent: list
+    for b in lis2:
+        tup.append((sum, sum + b, cnt))
+        sum += b
+        cnt += 1
+    pool = []
+    for c in range(len(lis2) // 2):
+        r = rnd.randint(0, sum - 1)
+        r2 = rnd.randint(0, sum - 1)
+        for a in tup:
+            if a[0] <= r < a[1]:
+                # [a[2]] because the chromosome index is calculated above cnt
+                first_parent = makespan_with_list[a[2]][1]
+            if a[0] <= r2 < a[1]:
+                second_parent = makespan_with_list[a[2]][1]
+        pool.append((first_parent, second_parent))
+    return pool
 
 def serial_SGS_with_activity_lists(g_lst: list, activities: list, rk: int):
     sj: list = [g_lst[0]] # activity number and finish_time
