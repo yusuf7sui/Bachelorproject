@@ -18,12 +18,9 @@ def run_genetic_algorithm(max_generations: int, pop_size: int, recource_capacity
             break
 
         children_pop = []
+        pool = selection(kind_of_selection, makespan_with_list)
         for gene in range(pop_size):
-            pool = selection(kind_of_selection, makespan_with_list)
-            # by probability make crossover-operators
-            # select parent with selection operators
-
-            # do crossover-operation
+            child1, child2 = crossover(kind_of_crossover, pool[gene][0], pool[gene][1])
 
             # mutate child
         # replace old population with new population
