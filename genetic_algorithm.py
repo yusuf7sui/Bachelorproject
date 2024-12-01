@@ -213,9 +213,38 @@ def calculate_fitness(chromosome: list, activities: list, resource_capacity: int
     finish_times, makespan = serial_SGS_with_activity_lists(chromosome, activities, resource_capacity)
     return finish_times, chromosome, makespan
 
-def mutate(mutate_rate: float):
-    # switch a gene from every chromosome if mutation probability is given
-    pass
+
+def mutate(mutate_rate: float, not_mutated_chrom: list, activity_list: list):
+    if mutate_rate == 0:
+        return not_mutated_chrom
+    mutated_chrom = not_mutated_chrom.copy()
+    for act in not_mutated_chrom:
+        p = round(rnd.uniform(0, 1), 3)
+        if p <= mutate_rate:
+            gene1 = not_mutated_chrom.index(act)
+            scnd = rnd.randint(0, len(not_mutated_chrom) - 1)
+            gene2 = not_mutated_chrom.index(scnd)
+            # if its not equal skip while loop
+            while gene1 == gene2:
+                gene2 = not_mutated_chrom.index(rnd.randint(0, len(not_mutated_chrom) - 1))
+            mutated_chrom[gene1] = not_mutated_chrom[gene2]
+            mutated_chrom[gene2] = not_mutated_chrom[gene1]
+    #If predecessors-condition is true than return mutated_chromosome, else the not mutated chromosome
+    if check_precedessors(mutated_chrom, activity_list):
+        return mutated_chrom
+    return not_mutated_chrom
+
+def check_precedessors(mutate_list: list, activity_list: list):
+    temp = []
+    temp.append(mutate_list[0])
+    if temp[0] != 0:
+        return False
+    for a in mutate_list:
+        temp.append(a)
+        for b in activity_list[a][2]:
+            if b not in temp:
+                return False
+    return True
 
 def replace():
     pass
