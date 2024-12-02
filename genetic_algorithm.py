@@ -246,5 +246,31 @@ def check_precedessors(mutate_list: list, activity_list: list):
                 return False
     return True
 
-def replace():
-    pass
+def replace(children_pop: list, makespan_of_parents: list, activities: list, pop: int, rk: int, elitsm_amount: int):
+    makespan_of_children = []
+    for a in children_pop:
+        makespan_of_children.append(calculate_fitness(a, activities, rk))
+    child_list = sorted(makespan_of_children, key=lambda x: x[2])
+    parents_list = sorted(makespan_of_parents, key=lambda x: x[2])
+
+    makespan_as_parents_list = []
+
+    if elitsm_amount <= pop - len(children_pop):
+        elitsm_amount = pop - len(children_pop)
+
+    for c in parents_list:
+        makespan_as_parents_list.append(c)
+        elitsm_amount -= 1
+        if elitsm_amount == 0:
+            break
+
+    pop -= elitsm_amount
+
+    for b in child_list:
+        makespan_as_parents_list.append(b)
+        pop -= 1
+        if pop == 0:
+            break
+
+    makespan_as_parents_list = sorted(makespan_as_parents_list, key=lambda x: x[2])
+    return makespan_as_parents_list   # finish_times, parent_pop, makespan
