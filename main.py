@@ -4,9 +4,9 @@ from genetic_algorithm import random_initial_population, selection, crossover, c
 
 import dataset as dt
 
-def run_genetic_algorithm(pop_size: int, kind_of_selection: str, kind_of_crossover: str, recomb_prob: float, mutate_rate: float):
+def run_genetic_algorithm(kind_of_selection: str, kind_of_crossover: str, pop_size: int, recomb_prob: float, mutate_rate: float, initial_pop: list[list]):
     ACTIVITIES = dt.base_data
-    parents_pop = random_initial_population(pop_size, ACTIVITIES)
+    parents_pop = initial_pop.copy()
     RESOURCE_CAPACITY = dt.RESOURCE_CAPACITY
     MAX_GENERATIONS = 100
     ELITSM_AMOUNT = pop_size // 4
@@ -44,6 +44,46 @@ def run_genetic_algorithm(pop_size: int, kind_of_selection: str, kind_of_crossov
     print(makespan_with_list[0][0])
     print(makespan_with_list[0][1])  # makespan_list[0][1] as the best parent
     # In python possible to use variable in for-loop afterwards
+    print('Nedded Generations: ', generation)
     return makespan_with_list[0][2], generation # return minimal_makespan and amount of needed generations
 
 #print(run_genetic_algorithm(20, 'test', 'test', 0.75, 0.01))
+
+def test_scenarios(data: list):
+    mutation_rate = [0.01, 0.1]
+    recombination_probability = [0.5, 0.75]
+    population_size = [8, 8]
+
+    operator_comb = []
+    for po in population_size:
+        for rp in recombination_probability:
+            for mr in mutation_rate:
+                operator_comb.append([po, rp, mr])
+
+    first_comb = []
+    second_comb = []
+    third_comb = []
+    fourth_comb = []
+    for param in operator_comb:
+        initial = random_initial_population(param[0], dt.base_data)
+        first_comb.append(run_genetic_algorithm('one_point_crossover', 'tournament_selection', param[0], param[1], param[2], initial))
+        second_comb.append(run_genetic_algorithm('uniform_crossover', 'tournament_selection', param[0], param[1], param[2], initial))
+        third_comb.append(run_genetic_algorithm('one_point_crossover', 'roulette_method', param[0], param[1], param[2], initial))
+        fourth_comb.append(run_genetic_algorithm('uniform_crossover', 'roulette_method', param[0], param[1], param[2], initial))
+    a1, b1, c1, d1 = 0, 0, 0, 0
+    a2, b2, c2, d2 = 0, 0, 0, 0
+    for z in range(8):
+        a1 += first_comb[z][0]
+        b1 += second_comb[z][0]
+        c1 += third_comb[z][0]
+        d1 += fourth_comb[z][0]
+        a2 += first_comb[z][1]
+        b2 += second_comb[z][1]
+        c2 += third_comb[z][1]
+        d2 += fourth_comb[z][1]
+    print('One-Point_AND_Tournament: \t', 'Avg Makespan: ',  a1 / 8, ' Avg Generation: ', a2 / 8, first_comb)
+    print('Uniform_AND_Tournament: \t', 'Avg Makespan: ', b1 / 8, ' Avg Generation: ', b2 / 8, second_comb)
+    print('One-Point_AND_Roulette: \t', 'Avg Makespan: ', c1 / 8, ' Avg Generation: ', c2 / 8, third_comb)
+    print('Uniform_AND_Roulette: \t', 'Avg Makespan: ', d1 / 8, ' Avg Generation: ', d2 / 8, fourth_comb)
+
+test_scenarios(dt.base_data)
