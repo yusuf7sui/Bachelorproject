@@ -37,14 +37,11 @@ def sort_genes(tmp_chrom: list, activities: list):
                 tmp_chrom.remove(gene)
     return sorted_chrom
 
-
 def crossover(kind_of_crossover: str, father: list, mother: list):
     if kind_of_crossover == 'one-point-crossover':
         return one_point_crossover(father, mother)
     else:
         return uniform_crossover(father, mother)
-
-
 
 def one_point_crossover(father: list, mother: list):
     child1 = []
@@ -104,14 +101,18 @@ def tournament_selection(makespan_with_list: list):
         a = rnd.randint(0, length)
         b = rnd.randint(0, length)
         first_parent: list
+        while makespan_with_list[a][1] == makespan_with_list[b][1]:
+            b = rnd.randint(0, length)
         if makespan_with_list[a][2] <= makespan_with_list[b][2]:
             first_parent = makespan_with_list[a][1]
         else:
             first_parent = makespan_with_list[b][1]
         c = rnd.randint(0, length)
         d = rnd.randint(0, length)
-        while makespan_with_list[c][1] != makespan_with_list[d][1] != first_parent:
+        while makespan_with_list[c][1] == first_parent:
             c = rnd.randint(0, length)
+        # here adjust as if they are eaqual with
+        while makespan_with_list[c][1] == (makespan_with_list[d][1] or first_parent):
             d = rnd.randint(0, length)
         second_parent: list
         if makespan_with_list[c][2] <= makespan_with_list[d][2]:
@@ -151,57 +152,55 @@ def roulette_selection(makespan_with_list: list):
         pool.append((first_parent, second_parent))
     return pool
 
-def serial_SGS_with_activity_lists(g_lst: list, activities: list, rk: int):
-    sj: list = [g_lst[0]] # activity number and finish_time
-    Fj = [0]
-    Fg = {sj[0]: Fj[0]} # finish time for corresponding sj's
-    fj = 0
+def serial_SGS_with_activity_lists(g_lst: list, activities: list, resource_capacity: int):
+    planned_activities: list = [g_lst[0]] # activity number and finish_time
+    finish_times = [0]
+    Fg = {planned_activities[0]: finish_times[0]} # finish time for corresponding sj's
+    finish_time_of_j = 0
     for j in g_lst[1:len(g_lst)]:
-        # duration of j
-        pj = activities[j][0]
-        # finish time
+        duration_of_j = activities[j][0]
+        # corresponding finish time
         fh = []
-        At = [] # j E J fj - pij <= t <Fj
+        active_at_t = []
         for a in activities[j][2]:
             fh.append(Fg[a])
-        EFj = max(fh) + pj
-        EFj_as_start = EFj - pj
-        t = list([EFj_as_start])
-        for x in sorted(Fj):
-            if EFj_as_start < x:
+        earliest_finish_time_of_j = max(fh) + duration_of_j
+        earliest_start_time_of_j = earliest_finish_time_of_j - duration_of_j
+        t = list([earliest_start_time_of_j])
+        for x in sorted(finish_times):
+            if earliest_start_time_of_j < x:
                 t.append(x)
         for tt in t:
             free_capacity = True # maybe change n to something better like resource....
             if tt == t[len(t) - 1]: # if last possible in t then
-                fj = tt + pj
+                finish_time_of_j = tt + duration_of_j
                 break
             idx = g_lst.index(j)
-            for c in range(tt, (tt + pj)):
-                for jj in g_lst[1:idx]:
-                    if (Fg[jj] - activities[jj][0]) <= c < Fg[jj]:
-                        At.append(jj)
-                rkl = 0
-                for bb in At:
-                    rkl += activities[bb][1]
-                capacity = rk - rkl
-                rkj = activities[j][1]
-                At = []
-                if rkj > capacity:
+            for time_instant in range(tt, (tt + duration_of_j)):
+                for activity in g_lst[1:idx]:
+                    if (Fg[activity] - activities[activity][0]) <= time_instant < Fg[activity]:
+                        active_at_t.append(activity)
+                sum_of_resources = 0
+                for active_activity in active_at_t:
+                    sum_of_resources += activities[active_activity][1]
+                free_resources = resource_capacity - sum_of_resources
+                needed_resource_of_j = activities[j][1]
+                active_at_t = []
+                if needed_resource_of_j > free_resources:
                     free_capacity = False
             if free_capacity:
-                fj = tt + pj
+                finish_time_of_j = tt + duration_of_j
                 break
-        Fj.append(fj)
-        sj.append(j)
-        Fg.update({j: fj})
-    makespan = max(Fj) # it's actually here from all Fj's... not the predecessors of last one
-    print(Fg, activities, makespan, "finish_times fg, activities and makespan")
+        finish_times.append(finish_time_of_j)
+        planned_activities.append(j)
+        Fg.update({j: finish_time_of_j})
+    makespan = max(finish_times)
+    print(Fg, activities, makespan, "finish_times Fg, activities and makespan")
     return Fg, makespan
 
 def calculate_fitness(chromosome: list, activities: list, resource_capacity: int):
     finish_times, makespan = serial_SGS_with_activity_lists(chromosome, activities, resource_capacity)
     return finish_times, chromosome, makespan
-
 
 def mutate(mutate_rate: float, not_mutated_chrom: list, activity_list: list):
     if mutate_rate == 0:
@@ -228,17 +227,17 @@ def check_precedessors(mutate_list: list, activity_list: list):
     temp.append(mutate_list[0])
     if temp[0] != 0:
         return False
-    for a in mutate_list:
-        temp.append(a)
-        for b in activity_list[a][2]:
-            if b not in temp:
+    for gene in mutate_list:
+        temp.append(gene)
+        for pred in activity_list[gene][2]:
+            if pred not in temp:
                 return False
     return True
 
 def replace(children_pop: list, makespan_of_parents: list, activities: list, pop: int, rk: int, elitsm_amount: int):
     makespan_of_children = []
-    for a in children_pop:
-        makespan_of_children.append(calculate_fitness(a, activities, rk))
+    for chrom in children_pop:
+        makespan_of_children.append(calculate_fitness(chrom, activities, rk))
     child_list = sorted(makespan_of_children, key=lambda x: x[2])
     parents_list = sorted(makespan_of_parents, key=lambda x: x[2])
 
@@ -247,16 +246,16 @@ def replace(children_pop: list, makespan_of_parents: list, activities: list, pop
     if elitsm_amount <= pop - len(children_pop):
         elitsm_amount = pop - len(children_pop)
 
-    for c in parents_list:
-        makespan_as_parents_list.append(c)
+    for chrom in parents_list:
+        makespan_as_parents_list.append(chrom)
         elitsm_amount -= 1
         if elitsm_amount == 0:
             break
 
     pop -= elitsm_amount
 
-    for b in child_list:
-        makespan_as_parents_list.append(b)
+    for chrom in child_list:
+        makespan_as_parents_list.append(chrom)
         pop -= 1
         if pop == 0:
             break
