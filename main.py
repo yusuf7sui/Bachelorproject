@@ -3,95 +3,105 @@ import time
 from genetic_algorithm import random_initial_population, selection, crossover, calculate_fitness, mutate, replace
 import dataset as dt
 
-def run_genetic_algorithm(kind_of_selection: str, kind_of_crossover: str, pop_size: int, recomb_prob: float, mutate_rate: float, initial_pop: list[list]):
+# Genetic Algorithm runs with corresponding parameters
+def run_genetic_algorithm(kind_of_selection: str, kind_of_crossover: str, pop_size: int, recomb_prob: float, mutate_rate: float, initial_pop: list):
     start_time = time.process_time()
     ACTIVITIES = dt.base_data
-    parents_pop = initial_pop.copy()
+    initial_population = initial_pop.copy() #because needed for other combinations
     RESOURCE_CAPACITY = dt.RESOURCE_CAPACITY
     MAX_GENERATIONS = 100
-    ELITSM_AMOUNT = pop_size // 4
+    ELITSM_AMOUNT = pop_size // 10
 
-    makespan_with_list = []
-    for chromosome in parents_pop:
-        makespan_with_list.append(calculate_fitness(chromosome, ACTIVITIES, RESOURCE_CAPACITY))
+    individuals_with_fitness = []
+    for genotype in initial_population:
+        individuals_with_fitness.append(calculate_fitness(genotype, ACTIVITIES, RESOURCE_CAPACITY))
 
     count_of_no_improvement = 1
     makespan_before = -1
     for generation in range(MAX_GENERATIONS):
+        # until a convergence or maximum of generations is reached
         if MAX_GENERATIONS // 4 == count_of_no_improvement:
             break
 
         children_pop = []
-        pool = selection(kind_of_selection, makespan_with_list)
-        for parent_pair in range(pop_size // 2): # because 2 childs max per parent_pair
-            recomb_prob_for_pair = round(random.uniform(0, 1), 3)
-            if recomb_prob_for_pair <= recomb_prob:
-                child1, child2 = crossover(kind_of_crossover, pool[parent_pair][0], pool[parent_pair][1])
+        pool = selection(kind_of_selection, individuals_with_fitness)
+        for pair in range(pop_size // 2):
+            pairs_recombine_prob = round(random.uniform(0, 1), 3)
+            if pairs_recombine_prob <= recomb_prob:
+                child1, child2 = crossover(kind_of_crossover, pool[pair][0], pool[pair][1])
                 child1 = mutate(mutate_rate, child1, ACTIVITIES)
                 child2 = mutate(mutate_rate, child2, ACTIVITIES)
                 children_pop.append(child1)
                 children_pop.append(child2)
-        makespan_with_list = replace(children_pop, makespan_with_list, ACTIVITIES, pop_size, RESOURCE_CAPACITY, ELITSM_AMOUNT)
+        individuals_with_fitness = replace(children_pop, individuals_with_fitness, ACTIVITIES, pop_size, RESOURCE_CAPACITY, ELITSM_AMOUNT)
 
-        # until a convergence or maximum of generations
-        if makespan_with_list[0][2] == makespan_before:
+        if individuals_with_fitness[0][2] == makespan_before:
             count_of_no_improvement += 1
         else:
             count_of_no_improvement = 0
-            makespan_before = makespan_with_list[0][2]
+            makespan_before = individuals_with_fitness[0][2]
         print("#####", generation, "######")
-        print(makespan_with_list[0][2])
-    print(makespan_with_list[0][0])
-    print(makespan_with_list[0][1])  # makespan_list[0][1] as the best parent
+        print(individuals_with_fitness[0][2])
+    print(individuals_with_fitness[0][0])
+    print(individuals_with_fitness[0][1])  # makespan_list[0][1] as the best parent
     # In python possible to use variable in for-loop afterwards
     print('Nedded Generations: ', generation)
     finish_time = time.process_time() - start_time
     print('CPU Time:', finish_time)
-    return makespan_with_list[0][2], generation, finish_time # maybe also return the finish time [0][0], with chromosomes as dict
+    return individuals_with_fitness[0][2], generation, finish_time, individuals_with_fitness[0][0]
+# maybe also return the finish time [0][0], with genotypes as dict to safe the best results and then return it back
 
-#print(run_genetic_algorithm(20, 'test', 'test', 0.75, 0.01))
-
+# temporary test: print(run_genetic_algorithm(20, 'test', 'test', 0.75, 0.01))
+# Function to test possible scenarios
 def test_scenarios():
-    mutation_rate = [0.01, 0.1]
+    mutation_rate = [0.001, 0.01]
     recombination_probability = [0.5, 0.75]
-    population_size = [8, 8]
+    population_size = [20, 40]
 
-    operator_comb = []
-    for po in population_size:
+    parameter_comb = []
+    for ps in population_size:
         for rp in recombination_probability:
             for mr in mutation_rate:
-                operator_comb.append([po, rp, mr])
+                parameter_comb.append([ps, rp, mr])
 
     first_comb = []
     second_comb = []
     third_comb = []
     fourth_comb = []
-    for param in operator_comb:
+    cnt = 0
+    for param in parameter_comb:
         initial = random_initial_population(param[0], dt.base_data)
-        first_comb.append(run_genetic_algorithm('one_point_crossover', 'tournament_selection', param[0], param[1], param[2], initial))
+        first_comb.append(run_genetic_algorithm('one_point_crossover','tournament_selection', param[0], param[1], param[2], initial))
         second_comb.append(run_genetic_algorithm('uniform_crossover', 'tournament_selection', param[0], param[1], param[2], initial))
         third_comb.append(run_genetic_algorithm('one_point_crossover', 'roulette_method', param[0], param[1], param[2], initial))
         fourth_comb.append(run_genetic_algorithm('uniform_crossover', 'roulette_method', param[0], param[1], param[2], initial))
-    a1, b1, c1, d1 = 0, 0, 0, 0
-    a2, b2, c2, d2 = 0, 0, 0, 0
-    a3, b3, c3, d3 = 0, 0, 0, 0
-    for para_comb in range(len(operator_comb)):
-        a1 += first_comb[para_comb][0]
-        b1 += second_comb[para_comb][0]
-        c1 += third_comb[para_comb][0]
-        d1 += fourth_comb[para_comb][0]
-        a2 += first_comb[para_comb][1]
-        b2 += second_comb[para_comb][1]
-        c2 += third_comb[para_comb][1]
-        d2 += fourth_comb[para_comb][1]
-        a3 += first_comb[para_comb][2]
-        b3 += second_comb[para_comb][2]
-        c3 += third_comb[para_comb][2]
-        d3 += fourth_comb[para_comb][2]
+        print(param, ' param')
+        print(cnt, 'cnt')
+        cnt += 1
 
-    print('One-Point_AND_Tournament: \t', 'Avg Makespan: ',  a1 / 8, ' Avg Generation: ', a2 / 8, ' Avg CPU: ', a3 / 8, first_comb)
-    print('Uniform_AND_Tournament: \t', 'Avg Makespan: ', b1 / 8, ' Avg Generation: ', b2 / 8, ' Avg CPU: ', b3 / 8, second_comb)
-    print('One-Point_AND_Roulette: \t', 'Avg Makespan: ', c1 / 8, ' Avg Generation: ', c2 / 8, ' Avg CPU: ', c3 / 8, third_comb)
-    print('Uniform_AND_Roulette: \t', 'Avg Makespan: ', d1 / 8, ' Avg Generation: ', d2 / 8, ' Avg CPU: ', d3 / 8, fourth_comb)
+
+    avg_results = [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]]
+    for para_comb in range(len(parameter_comb)):
+        for res in range(3):
+            avg_results[0][res] += first_comb[para_comb][res]
+            avg_results[1][res] += second_comb[para_comb][res]
+            avg_results[2][res] += third_comb[para_comb][res]
+            avg_results[3][res] += fourth_comb[para_comb][res]
+            print(para_comb, ' Paracomb')
+
+    print(avg_results[0], avg_results[1], avg_results[2], first_comb, 'Tests')
+
+    # calculate minimal schedule and print
+    all_comb = first_comb + second_comb + third_comb + fourth_comb
+    min_schedule = sorted(all_comb, key=lambda x: x[0])
+    print('Minimal Schedule: ', min_schedule[0][3])
+
+    all_comb = [first_comb, second_comb, third_comb, fourth_comb]
+    combinations = ['One-Point_AND_Tournament', 'Uniform_AND_Tournamnt', 'One-Point_AND_Roulette', 'Uniform_AND_Roulette']
+    # calculate average results for all combinations and print
+    for comb_numb in range(4):
+        print(f'{combinations[comb_numb]}\n', 'Avg Makespan\t: ', avg_results[comb_numb][0] / 8, 'Avg Generation\t: ',
+                    avg_results[comb_numb][1] / 8, ' Avg CPU\t: ',
+                    avg_results[comb_numb][2] / 8, '\n', all_comb[comb_numb])
 
 test_scenarios()

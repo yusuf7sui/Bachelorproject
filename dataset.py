@@ -1,12 +1,11 @@
-
 '''
 TODO: Add extended data for validation and scenarios later.
 '''
 
-'''
-base data with corresponding meaning for data:
-duration, resource, [predecessors]
-'''
+"""
+list of lists for the rcpsp in following order
+duration, resource, and list of predecessors
+"""
 base_data = [[0, 0, []],
         [2, 2, [0]],
         [5, 2, [0]],
