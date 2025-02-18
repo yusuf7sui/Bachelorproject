@@ -10,7 +10,7 @@ def run_genetic_algorithm(kind_of_selection: str, kind_of_crossover: str, pop_si
     initial_population = initial_pop.copy() #because needed for other combinations
     RESOURCE_CAPACITY = dt.RESOURCE_CAPACITY
     MAX_GENERATIONS = 100
-    ELITSM_AMOUNT = pop_size // 10
+    ELITISM_AMOUNT = pop_size // 4
 
     individuals_with_fitness = []
     for genotype in initial_population:
@@ -20,7 +20,7 @@ def run_genetic_algorithm(kind_of_selection: str, kind_of_crossover: str, pop_si
     makespan_before = -1
     for generation in range(MAX_GENERATIONS):
         # until a convergence or maximum of generations is reached
-        if MAX_GENERATIONS // 4 == count_of_no_improvement:
+        if MAX_GENERATIONS // 10 == count_of_no_improvement:
             break
 
         children_pop = []
@@ -33,7 +33,7 @@ def run_genetic_algorithm(kind_of_selection: str, kind_of_crossover: str, pop_si
                 child2 = mutate(mutate_rate, child2, ACTIVITIES)
                 children_pop.append(child1)
                 children_pop.append(child2)
-        individuals_with_fitness = replace(children_pop, individuals_with_fitness, ACTIVITIES, pop_size, RESOURCE_CAPACITY, ELITSM_AMOUNT)
+        individuals_with_fitness = replace(children_pop, individuals_with_fitness, ACTIVITIES, pop_size, RESOURCE_CAPACITY, ELITISM_AMOUNT)
 
         if individuals_with_fitness[0][2] == makespan_before:
             count_of_no_improvement += 1
@@ -55,7 +55,7 @@ def run_genetic_algorithm(kind_of_selection: str, kind_of_crossover: str, pop_si
 # Function to test possible scenarios
 def test_scenarios():
     mutation_rate = [0.001, 0.01]
-    recombination_probability = [0.5, 0.75]
+    recombination_probability = [0.4, 0.7]
     population_size = [20, 40]
 
     parameter_comb = []

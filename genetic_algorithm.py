@@ -217,7 +217,7 @@ def serial_SGS_with_activity_lists(activity_list: list, activities: list, resour
         planned_activities.append(j)
         schedule.update({j: finish_time_of_j})
     makespan = max(finish_times)
-    print(schedule, activities, makespan, "finish_times Fg, activities and makespan")
+    print(schedule, activities, makespan, "schedule, activities and makespan")
     return schedule, makespan
 
 def calculate_fitness(genotype: list, activities: list, resource_capacity: int):
@@ -248,7 +248,7 @@ def mutate(mutate_rate: float, not_mutated_genotype: list, activity_list: list):
     print(check_precedessors(mutated_genotype, activity_list), 'Mutate')
     if check_precedessors(mutated_genotype, activity_list):
         if not_mutated_genotype != mutated_genotype:
-            print('Successfull_mutation!')
+            print('Successfully_mutation!')
         return mutated_genotype
     return not_mutated_genotype
 
@@ -272,27 +272,31 @@ for a in range(20):
     print('')
 '''
 
-def replace(children_pop: list, parents_with_fitness: list, activities: list, pop_size: int, resource_cap: int, elitsm_amount: int):
+def replace(children_pop: list, parents_with_fitness: list, activities: list, pop_size: int, resource_cap: int, elitism_amount: int):
     childrens_pop_size = len(children_pop)
     children_with_fitness = []
     for genotype in children_pop:
         children_with_fitness.append(calculate_fitness(genotype, activities, resource_cap))
     child_list = sorted(children_with_fitness, key=lambda x: x[2])
     parents_list = sorted(parents_with_fitness, key=lambda x: x[2])
-
+    print(elitism_amount, 'elitism before')
     new_population = []
     # If elitms amount is to small cause of recombinations didn't happen often,
     # increse eltitsm_amount to have initial population size in next generation
-    if elitsm_amount <= pop_size - childrens_pop_size:
-        elitsm_amount = pop_size - childrens_pop_size
+    print(elitism_amount, 'elitism amount and needed minimum:', pop_size - childrens_pop_size)
+    if elitism_amount < pop_size - childrens_pop_size:
+        elitism_amount = pop_size - childrens_pop_size
+
+    print(elitism_amount, 'elitism afterwards')
+    pop_size -= elitism_amount
 
     for individual_with_fitness in parents_list:
         new_population.append(individual_with_fitness)
-        elitsm_amount -= 1
-        if elitsm_amount == 0:
+        elitism_amount -= 1
+        if elitism_amount == 0:
             break
 
-    pop_size -= elitsm_amount
+    print('Pop size: ', pop_size, elitism_amount)
 
     for individual_with_fitness in child_list:
         new_population.append(individual_with_fitness)
@@ -300,5 +304,6 @@ def replace(children_pop: list, parents_with_fitness: list, activities: list, po
         if pop_size == 0:
             break
 
+    print('fitness: ', len(new_population))
     individuals_with_fitness = sorted(new_population, key=lambda x: x[2])
     return individuals_with_fitness   # finish_times, parent_pop, makespan
