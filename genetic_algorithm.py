@@ -1,7 +1,7 @@
 import random as rnd
 
 rnd.seed(10)
-
+import  dataset as dt
 #Initilize population with permutation based codes
 def random_initial_population(pop_size: int, activities: list):
     tmp_pop = []
@@ -43,7 +43,7 @@ def sort_genes(tmp_genotype: list, activities: list):
     print(sorted_genotype)
     return sorted_genotype
 
-# test initial = random_initial_population(2, dataset.base_data)
+# test initial = random_initial_population(2, dt.base_data)
 
 def crossover(kind_of_crossover: str, father: list, mother: list):
     if kind_of_crossover == 'one-point-crossover':
@@ -174,51 +174,51 @@ print(tournament_selection(tupelss), 'tournament_selection_results')
 '''
 
 def serial_SGS_with_activity_lists(activity_list: list, activities: list, resource_capacity: int):
-    planned_activities: list = [activity_list[0]] # activity number and finish_time
-    finish_times = [0]
-    print('PPPPPPP', planned_activities, finish_times)
-    schedule = {planned_activities[0]: finish_times[0]} # finish time for corresponding sj's
-    finish_time_of_j = 0
-    for j in activity_list[1:len(activity_list)]:
-        duration_of_j = activities[j][0]
+    schedule = {activity_list[0]: 0} # finish time for corresponding sj's
+    finish_time_of_act = 0
+    for act in activity_list[1:len(activity_list)]:
+        duration_of_act = activities[act][0]
         # corresponding finish time
-        fh = []
-        active_at_t = []
-        for a in activities[j][2]:
-            fh.append(schedule[a])
-        earliest_finish_time_of_j = max(fh) + duration_of_j
-        earliest_start_time_of_j = earliest_finish_time_of_j - duration_of_j
-        t = list([earliest_start_time_of_j])
-        for x in sorted(finish_times):
-            if earliest_start_time_of_j < x:
-                t.append(x)
-        for tt in t:
-            free_capacity = True # maybe change n to something better like resource....
-            if tt == t[len(t) - 1]: # if last possible in t then
-                finish_time_of_j = tt + duration_of_j
+        acts_predecessors = []
+        active_activities = []
+        for pred in activities[act][2]:
+            acts_predecessors.append(schedule[pred])
+        earliest_finish_time_of_act = max(acts_predecessors) + duration_of_act
+        earliest_start_time_of_act = earliest_finish_time_of_act - duration_of_act
+        possible_start_times = list([earliest_start_time_of_act])
+        for finish_time in sorted(schedule.values()):
+            if earliest_start_time_of_act < finish_time:
+                possible_start_times.append(finish_time)
+        for time in possible_start_times:
+            free_capacity = True
+            if time == possible_start_times[len(possible_start_times) - 1]:
+                finish_time_of_act = time + duration_of_act
                 break
-            idx = activity_list.index(j)
-            for time_instant in range(tt, (tt + duration_of_j)):
-                for activity in activity_list[1:idx]:
-                    if (schedule[activity] - activities[activity][0]) <= time_instant < schedule[activity]:
-                        active_at_t.append(activity)
+            possible_starts = list(range(time, (time + duration_of_act)))
+            time_period = filter(lambda t: t in possible_start_times, possible_starts)
+            for time_instant in time_period:
+                for already_planned_act in schedule.keys():
+                    if ((schedule[already_planned_act] - activities[already_planned_act][0])
+                            <= time_instant < schedule[already_planned_act]):
+                        active_activities.append(already_planned_act)
                 sum_of_resources = 0
-                for active_activity in active_at_t:
-                    sum_of_resources += activities[active_activity][1]
+                for active_act in active_activities:
+                    sum_of_resources += activities[active_act][1]
                 free_resources = resource_capacity - sum_of_resources
-                needed_resource_of_j = activities[j][1]
-                active_at_t = []
-                if needed_resource_of_j > free_resources:
+                needed_resource_of_act = activities[act][1]
+                active_activities = []
+                if needed_resource_of_act > free_resources:
                     free_capacity = False
             if free_capacity:
-                finish_time_of_j = tt + duration_of_j
+                finish_time_of_act = time + duration_of_act
                 break
-        finish_times.append(finish_time_of_j)
-        planned_activities.append(j)
-        schedule.update({j: finish_time_of_j})
-    makespan = max(finish_times)
+        schedule.update({act: finish_time_of_act})
+    makespan = schedule[len(activities) - 1] # instead of sum so lesser resources needed
     print(schedule, activities, makespan, "schedule, activities and makespan")
     return schedule, makespan
+
+test_activity_list = [0, 7, 1, 13, 4, 3, 16, 17, 2, 6, 19, 5, 14, 8, 15, 9, 10, 12, 11, 18, 20]
+print(serial_SGS_with_activity_lists(test_activity_list, dt.base_data, dt.RESOURCE_CAPACITY))
 
 def calculate_fitness(genotype: list, activities: list, resource_capacity: int):
     phenotype, fitness = serial_SGS_with_activity_lists(genotype, activities, resource_capacity)
@@ -265,9 +265,9 @@ def check_precedessors(mutate_list: list, activity_list: list):
     return True
 
 '''
-test_schedule = [0, 7, 1, 13, 4, 3, 16, 17, 2, 6, 19, 5, 14, 8, 15, 9, 10, 12, 11, 18, 20]
+test_activity_list = [0, 7, 1, 13, 4, 3, 16, 17, 2, 6, 19, 5, 14, 8, 15, 9, 10, 12, 11, 18, 20]
 for a in range(20):
-    b = mutate(0.5, test_schedule, dataset.base_data)
+    b = mutate(0.5, test_schedule, dt.base_data)
     print(b)
     print('')
 '''

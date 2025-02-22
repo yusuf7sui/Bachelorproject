@@ -10,7 +10,7 @@ def run_genetic_algorithm(kind_of_selection: str, kind_of_crossover: str, pop_si
     initial_population = initial_pop.copy() #because needed for other combinations
     RESOURCE_CAPACITY = dt.RESOURCE_CAPACITY
     MAX_GENERATIONS = 100
-    ELITISM_AMOUNT = pop_size // 4
+    ELITISM_AMOUNT = pop_size // 5
 
     individuals_with_fitness = []
     for genotype in initial_population:
@@ -18,6 +18,7 @@ def run_genetic_algorithm(kind_of_selection: str, kind_of_crossover: str, pop_si
 
     count_of_no_improvement = 1
     makespan_before = -1
+    generation = 0
     for generation in range(MAX_GENERATIONS):
         # until a convergence or maximum of generations is reached
         if MAX_GENERATIONS // 10 == count_of_no_improvement:
@@ -56,7 +57,7 @@ def run_genetic_algorithm(kind_of_selection: str, kind_of_crossover: str, pop_si
 def test_scenarios():
     mutation_rate = [0.001, 0.01]
     recombination_probability = [0.4, 0.7]
-    population_size = [20, 40]
+    population_size = [10, 20]
 
     parameter_comb = []
     for ps in population_size:
@@ -102,6 +103,6 @@ def test_scenarios():
     for comb_numb in range(4):
         print(f'{combinations[comb_numb]}\n', 'Avg Makespan\t: ', avg_results[comb_numb][0] / 8, 'Avg Generation\t: ',
                     avg_results[comb_numb][1] / 8, ' Avg CPU\t: ',
-                    avg_results[comb_numb][2] / 8, '\n', all_comb[comb_numb])
+                    round(avg_results[comb_numb][2] / 8, 4), '\n', list(map(lambda x: x[0:3], all_comb[comb_numb])))
 
 test_scenarios()
