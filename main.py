@@ -51,13 +51,7 @@ def run_genetic_algorithm(sel_type: str, cross_type: str,
         else:
             no_improvements_counter = 0
             best_fitness = pop[0][2]
-
-        # print("#####", generation + 1, "######")
-        # print(pop[0][2])
     generation += 1
-    # print(pop[0][0])
-    # print(pop[0][1])
-    # print('Needed Generations: ', generation)
     cpu_time = time.process_time() - start_time
     print('Operators: ', sel_type, cross_type, '\nCPU-Time: ', cpu_time)
     print('Generation: ', generation, '\nMinimal Project Size: ', pop[0][2], '\n')

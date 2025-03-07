@@ -15,7 +15,6 @@ def random_initial_population(pop_size: int, rcpsp: list):
         temp_genotype.remove(temp_genotype[0])
         rnd.shuffle(temp_genotype)
         shuffled_genotype = shuffled_genotype + temp_genotype
-        #print(shuffled_genotype)
         random_pop.append(sort_alleles(shuffled_genotype, rcpsp))
         shuffled_genotype = []
     return random_pop
@@ -34,10 +33,8 @@ def sort_alleles(temp_genotype: list, rcpsp: list):
                     pred_assigned_before = False
             if pred_assigned_before:
                 sorted_genotype.append(allele)
-    #print(sorted_genotype)
     return sorted_genotype
 
-# test: initial = random_initial_population(4, RCPSP)
 
 def crossover(cross_type: str, parent1: list, parent2: list):
     if cross_type == 'one_point':
@@ -45,12 +42,10 @@ def crossover(cross_type: str, parent1: list, parent2: list):
     else:
         return uniform_crossover(parent1, parent2)
 
+
 def one_point_crossover(parent1: list, parent2: list):
     offspring1, offspring2 = [], []
-    #print(parent1, 'parent1')
-    #print(parent2, 'parent2')
     crosspoint = rnd.randint(1, len(parent1) - 1)
-    #print(crosspoint)
     for gene in range(crosspoint):
         offspring1.append(parent1[gene])
         offspring2.append(parent2[gene])
@@ -61,16 +56,12 @@ def one_point_crossover(parent1: list, parent2: list):
             offspring2.append(parent1[gene])
     return offspring1, offspring2
 
-# test: print(one_point_crossover(initial[2], initial[3]))
 
 def uniform_crossover(parent1: list, parent2: list):
     offspring1, offspring2 = [], []
     binary_string = []
     for _ in range(len(parent1)):
         binary_string.append(rnd.randint(0, 1))
-    #print(parent1, 'parent1')
-    #print(parent2, 'parent2')
-    #print(binary_string)
     for bit in binary_string:
         if bit == 1:
             for gene in parent1:
@@ -92,13 +83,13 @@ def uniform_crossover(parent1: list, parent2: list):
                     break
     return offspring1, offspring2
 
-# test: print(uniform_crossover(initial[0], initial[1]))
 
 def selection(sel_type: str, pop: list):
     if sel_type == 'tournament':
         return tournament_selection(pop)
     else:
         return roulette_selection(pop)
+
 
 def tournament_selection(pop: list):
     parents_amount = len(pop) // 2
@@ -130,9 +121,9 @@ def tournament_selection(pop: list):
         pool.append(tuple(parents))
     return pool
 
+
 def roulette_selection(pop: list):
     inverse_fittness = []
-    #print(pop, 'population')
     for individual in pop:
         inverse_fittness.append(round(1 / individual[2], 4))
     sum = 0
@@ -161,23 +152,8 @@ def roulette_selection(pop: list):
             value2 = round(rnd.uniform(0, sum - 1), 4)
             attempt += 1
         pool.append((parent1, parent2))
-    #print('Are Parents same: ', parent1 == parent2)
-    #print('Scopes;', scopes)
     return pool
 
-'''
-initial = random_initial_population(2, RCPSP)
-parents = []
-cnt = 50
-for ind in initial:
-    parents.append(([], ind, cnt))
-    cnt += 1
-#print(tournament_selection(parents), 'tournament_selection_results')
-print(roulette_selection(parents), 'Roulette_selection_results')
-for _ in range(100):
-    print(tournament_selection(parents), 'tournament_selection_results')
-    print(roulette_selection(parents), 'Roulette_selection_results')
-'''
 
 def serial_SGS_for_activity_lists(activity_list: list,
                                   rcpsp: list, resource_capacity: int
@@ -226,13 +202,11 @@ def serial_SGS_for_activity_lists(activity_list: list,
     return schedule, project_duration
 
 
-#test_activity_list = random_initial_population(2, RCPSP)[0]
-#print(serial_SGS_for_activity_lists(test_activity_list, RCPSP, RESOURCE_CAPACITY))
-
 def calculate_fitness(genotype: list, rcpsp: list, resource_capacity: int):
     phenotype, fitness = serial_SGS_for_activity_lists(
         genotype, rcpsp, resource_capacity)
     return phenotype, genotype, fitness
+
 
 def mutation(mutation_prob: float, not_mutated_genotype: list, rcpsp: list):
     if mutation_prob == 0:
@@ -250,11 +224,12 @@ def mutation(mutation_prob: float, not_mutated_genotype: list, rcpsp: list):
                 temp_allele = mutated_genotype[gene]
                 mutated_genotype[gene] = mutated_genotype[next_gene]
                 mutated_genotype[next_gene] = temp_allele
-    if check_precedessor_constraints(mutated_genotype, rcpsp):
+    if check_predecessor_constraints(mutated_genotype, rcpsp):
         return mutated_genotype
     return not_mutated_genotype
 
-def check_precedessor_constraints(mutated_genotype: list, rcpsp: list):
+
+def check_predecessor_constraints(mutated_genotype: list, rcpsp: list):
     temp = []
     temp.append(mutated_genotype[0])
     if temp[0] != 0:
@@ -265,12 +240,6 @@ def check_precedessor_constraints(mutated_genotype: list, rcpsp: list):
             if pred not in temp:
                 return False
     return True
-
-'''
-test_activity_list = random_initial_population(2, RCPSP)[0]
-for _ in range(20):
-    test_result = mutation(0.1, test_activity_list, RCPSP)
-'''
 
 def replacement(offspring_pop: list, parents_pop: list, elites_amount: int):
     offspring_pop_size = len(offspring_pop)

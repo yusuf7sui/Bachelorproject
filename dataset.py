@@ -1,6 +1,6 @@
 """
 RCPSP includes activities as lists while
-every activity data structure built like:
+each activity data structure built like:
 [duration, resource, and list of predecessors]
 """
 RCPSP = [[0, 0, []],
