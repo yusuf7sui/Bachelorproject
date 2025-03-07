@@ -5,7 +5,7 @@ from dataset import RCPSP, RESOURCE_CAPACITY
 rnd.seed(10)
 
 
-def run_genetic_algorithm(sel_type: str, cross_type: str,
+def genetic_algorithm(sel_type: str, cross_type: str,
                           pop_size: int, recomb_prob: float,
                           mutation_prob: float, initial_pop: list
                           ):
@@ -53,13 +53,11 @@ def run_genetic_algorithm(sel_type: str, cross_type: str,
             best_fitness = pop[0][2]
     generation += 1
     cpu_time = time.process_time() - start_time
-    print('Operators: ', sel_type, cross_type, '\nCPU-Time: ', cpu_time)
-    print('Generation: ', generation, '\nMinimal Project Size: ', pop[0][2], '\n')
     # minimal project duration, generation, cpu_time and min schedule
     return pop[0][2], generation, cpu_time, pop[0][0]
 
 
-def test_scenarios():
+def run_test_scenarios():
     pop_sizes = [50, 100]
     recomb_probs = [0.6, 0.9]
     mutation_probs = [0.03, 0.07]
@@ -81,15 +79,14 @@ def test_scenarios():
 
     comb1, comb2, comb3, comb4 = [], [], [], []
     for pc in par_combs:
-        print('Used parameters', pc, '\n')
         init_pop = ga.random_initial_population(pc[0], RCPSP)
-        comb1.append(run_genetic_algorithm(
+        comb1.append(genetic_algorithm(
             'tournament', 'one_point', pc[0], pc[1], pc[2], init_pop))
-        comb2.append(run_genetic_algorithm(
+        comb2.append(genetic_algorithm(
             'tournament', 'uniform', pc[0], pc[1], pc[2], init_pop))
-        comb3.append(run_genetic_algorithm(
+        comb3.append(genetic_algorithm(
             'roulette', 'one_point', pc[0], pc[1], pc[2], init_pop))
-        comb4.append(run_genetic_algorithm(
+        comb4.append(genetic_algorithm(
             'roulette', 'uniform', pc[0], pc[1], pc[2], init_pop))
 
     results = [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]]
@@ -122,4 +119,4 @@ def test_scenarios():
               )
 
 
-test_scenarios()
+run_test_scenarios()
