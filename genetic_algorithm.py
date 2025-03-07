@@ -1,277 +1,265 @@
 import random as rnd
-
 rnd.seed(10)
-import dataset as dt
 
 def random_initial_population(pop_size: int, rcpsp: list):
-    tmp_pop = []
+    temp_pop = []
     for _ in range(pop_size):
-        tmp_genotype = []
-        for gene in range(len(rcpsp)):
-            tmp_genotype.append(gene)
-        tmp_pop.append(tmp_genotype)
+        temp_genotype = []
+        for allele in range(len(rcpsp)):
+            temp_genotype.append(allele)
+        temp_pop.append(temp_genotype)
     shuffled_genotype = []
-    random_population = []
-    for tmp_genotype in tmp_pop:
-        shuffled_genotype.append(tmp_genotype[0])
-        tmp_genotype.remove(tmp_genotype[0])
-        rnd.shuffle(tmp_genotype)
-        shuffled_genotype = shuffled_genotype + tmp_genotype
-        print(shuffled_genotype)
-        random_population.append(sort_genes(shuffled_genotype, rcpsp))
+    random_pop = []
+    for temp_genotype in temp_pop:
+        shuffled_genotype.append(temp_genotype[0])
+        temp_genotype.remove(temp_genotype[0])
+        rnd.shuffle(temp_genotype)
+        shuffled_genotype = shuffled_genotype + temp_genotype
+        #print(shuffled_genotype)
+        random_pop.append(sort_alleles(shuffled_genotype, rcpsp))
         shuffled_genotype = []
-    return random_population
+    return random_pop
 
-def sort_genes(tmp_genotype: list, rcpsp: list):
+def sort_alleles(temp_genotype: list, rcpsp: list):
     sorted_genotype = []
-    sorted_genotype.append(tmp_genotype[0])
-    tmp_genotype.remove(tmp_genotype[0])
+    sorted_genotype.append(temp_genotype[0])
+    temp_genotype.remove(temp_genotype[0])
     while len(sorted_genotype) != len(rcpsp):
-        for gene in tmp_genotype:
-            if sorted_genotype.count(gene) == 1:
+        for allele in temp_genotype:
+            if sorted_genotype.count(allele) == 1:
                 continue
-            check = True
-            for predecessor in rcpsp[gene][2]:
-                if predecessor not in sorted_genotype:
-                    check = False
-            if check:
-                sorted_genotype.append(gene)
-    print(sorted_genotype)
+            pred_assigned_before = True
+            for pred in rcpsp[allele][2]:
+                if pred not in sorted_genotype:
+                    pred_assigned_before = False
+            if pred_assigned_before:
+                sorted_genotype.append(allele)
+    #print(sorted_genotype)
     return sorted_genotype
 
-#initial = random_initial_population(2, dt.BASE_RCPSP)
+# test: initial = random_initial_population(4, RCPSP)
 
-def crossover(kind_of_crossover: str, father: list, mother: list):
-    if kind_of_crossover == 'one-point':
-        return one_point_crossover(father, mother)
+def crossover(cross_type: str, parent1: list, parent2: list):
+    if cross_type == 'one_point':
+        return one_point_crossover(parent1, parent2)
     else:
-        return uniform_crossover(father, mother)
+        return uniform_crossover(parent1, parent2)
 
-def one_point_crossover(father: list, mother: list):
-    child1 = []
-    child2 = []
-    print(father)
-    print(mother)
-
-    crosspoint = rnd.randint(1, len(father) - 1)
-    print(crosspoint, 'crosspoint included gene 0 as index 1')
-
+def one_point_crossover(parent1: list, parent2: list):
+    offspring1, offspring2 = [], []
+    #print(parent1, 'parent1')
+    #print(parent2, 'parent2')
+    crosspoint = rnd.randint(1, len(parent1) - 1)
+    #print(crosspoint)
     for gene in range(crosspoint):
-        child1.append(father[gene])
-        child2.append(mother[gene])
+        offspring1.append(parent1[gene])
+        offspring2.append(parent2[gene])
+    for gene in range(len(parent1)):
+        if offspring1.count(parent2[gene]) == 0:
+            offspring1.append(parent2[gene])
+        if offspring2.count(parent1[gene]) == 0:
+            offspring2.append(parent1[gene])
+    return offspring1, offspring2
 
-    for gene in range(len(father)):
-        if child1.count(mother[gene]) == 0:
-            child1.append(mother[gene])
-        if child2.count(father[gene]) == 0:
-            child2.append(father[gene])
-    return child1, child2
+# test: print(one_point_crossover(initial[2], initial[3]))
 
-#test: print(one_point_crossover(initial[0], initial[1]))
-
-def uniform_crossover(father: list, mother: list):
-    child1 = []
-    child2 = []
+def uniform_crossover(parent1: list, parent2: list):
+    offspring1, offspring2 = [], []
     binary_string = []
-    for _ in range(len(father)):
+    for _ in range(len(parent1)):
         binary_string.append(rnd.randint(0, 1))
-    print(father, 'f')
-    print(mother, 'm')
-    print(binary_string)
+    #print(parent1, 'parent1')
+    #print(parent2, 'parent2')
+    #print(binary_string)
     for bit in binary_string:
         if bit == 1:
-            for gene in father:
-                if gene not in child1:
-                    child1.append(gene)
+            for gene in parent1:
+                if gene not in offspring1:
+                    offspring1.append(gene)
                     break
-            for gene in mother:
-                if gene not in child2:
-                    child2.append(gene)
+            for gene in parent2:
+                if gene not in offspring2:
+                    offspring2.append(gene)
                     break
         if bit == 0:
-            for gene in mother:
-                if gene not in child1:
-                    child1.append(gene)
+            for gene in parent2:
+                if gene not in offspring1:
+                    offspring1.append(gene)
                     break
-            for gene in father:
-                if gene not in child2:
-                    child2.append(gene)
+            for gene in parent1:
+                if gene not in offspring2:
+                    offspring2.append(gene)
                     break
-    return child1, child2
+    return offspring1, offspring2
 
-#print(uniform_crossover(initial[0], initial[1]))
+# test: print(uniform_crossover(initial[0], initial[1]))
 
-def selection(kind_of_selection: str, individuals_with_fitness: list):
-    if kind_of_selection == 'tournament':
-        return tournament_selection(individuals_with_fitness)
+def selection(sel_type: str, pop: list):
+    if sel_type == 'tournament':
+        return tournament_selection(pop)
     else:
-        return roulette_selection(individuals_with_fitness)
+        return roulette_selection(pop)
 
-def tournament_selection(individuals_with_fitness: list):
-    upper_bound = len(individuals_with_fitness) - 1
+def tournament_selection(pop: list):
+    parents_amount = len(pop) // 2
+    parents_size = 2
+    max_attempts = 5
+    last_act = len(pop) - 1
     pool = []
-    all_same = any(individuals_with_fitness[indx][1] == individuals_with_fitness[0][1]
-                   for indx in range(len(individuals_with_fitness)))
-    for _ in range(len(individuals_with_fitness) // 2):
-        parent_pair = []
-        #always two times for corresponding paremtpair
-        for _ in range(2):
-            value1 = rnd.randint(0, upper_bound)
-            value2 = rnd.randint(0, upper_bound)
-            print('values', value1, value2)
-            while parent_pair.count(individuals_with_fitness[value1][1]) == 1 and not all_same:
-                value1 = rnd.randint(0, upper_bound)
-            while parent_pair.count(individuals_with_fitness[value2][1]) == 1 and not all_same:
-                value2 = rnd.randint(0, upper_bound)
-            print('valuessafe', value1, value2)
-            if individuals_with_fitness[value1][2] <= individuals_with_fitness[value2][2]:
-                parent_pair.append(individuals_with_fitness[value1][1])
+    for _ in range(parents_amount):
+        parents = []
+        attempt = 0
+        for _ in range(parents_size):
+            individual1 = rnd.randint(0, last_act)
+            individual2 = rnd.randint(0, last_act)
+            while parents.count(pop[individual1][1]) == 1:
+                if attempt == max_attempts:
+                    break
+                individual1 = rnd.randint(0, last_act)
+                attempt += 1
+            attempt = 0
+            while parents.count(pop[individual2][1]) == 1:
+                if attempt == max_attempts:
+                    break
+                individual2 = rnd.randint(0, last_act)
+                attempt += 1
+            if pop[individual1][2] <= pop[individual2][2]:
+                parents.append(pop[individual1][1])
             else:
-                parent_pair.append(individuals_with_fitness[value2][1])
-        if parent_pair[0] == parent_pair[1]:
-            print('Parents are same')
-        pool.append(tuple(parent_pair))
-    print(all_same)
+                parents.append(pop[individual2][1])
+        pool.append(tuple(parents))
     return pool
 
-def roulette_selection(individuals_with_fitness: list):
+def roulette_selection(pop: list):
     inverse_fittness = []
-    #print(individuals_with_fitness, 'individuals_with_fitness', )
-    INVERSE_VALUE = 100
-    for item in individuals_with_fitness:
-        inverse_fittness.append(INVERSE_VALUE - item[2]) #2 because of the makespans
+    #print(pop, 'population')
+    for individual in pop:
+        inverse_fittness.append(round(1 / individual[2], 4))
     sum = 0
-    ranges = []
+    scopes = []
     counter = 0
-    attempts = 5
-    parent1: list
-    parent2: list
-    #print(individuals_with_fitness, ' iiii')
+    max_attempts = 5
     for value in inverse_fittness:
-        ranges.append((sum, sum + value, counter))
+        scopes.append((round(sum, 4), round(sum + value, 4), counter))
         sum += value
         counter += 1
     pool = []
-    for _ in range(len(individuals_with_fitness) // 2):
-        value1 = rnd.randint(0, sum - 1)
-        value2 = rnd.randint(0, sum - 1)
-        check = True
+    parents_amount = len(pop) // 2
+    for _ in range(parents_amount):
+        value1 = round(rnd.uniform(0, sum - 0.001), 4)
+        value2 = round(rnd.uniform(0, sum - 0.001), 4)
+        need_assignments = True
         attempt = 0
-        while check:
-            for element in ranges:
-                if element[0] <= value1 < element[1]:
-                    parent1 = individuals_with_fitness[element[2]][1]
-                if element[0] <= value2 < element[1]:
-                    parent2 = individuals_with_fitness[element[2]][1]
-            if parent1 != parent2 or attempt == attempts:
+        while need_assignments:
+            for scope in scopes:
+                if scope[0] <= value1 < scope[1]:
+                    parent1 = pop[scope[2]][1]
+                if scope[0] <= value2 < scope[1]:
+                    parent2 = pop[scope[2]][1]
+            if parent1 != parent2 or attempt == max_attempts:
                 break
-            value2 = rnd.randint(0, sum - 1)
+            value2 = round(rnd.uniform(0, sum - 1), 4)
             attempt += 1
         pool.append((parent1, parent2))
-    if (parent1 == parent2):
-        print('Parent are same!')
+    #print('Are Parents same: ', parent1 == parent2)
+    #print('Scopes;', scopes)
     return pool
 
 '''
-initial = random_initial_population(2, dt.BASE_RCPSP)
-pairs = []
-cnt = 10
+initial = random_initial_population(2, RCPSP)
+parents = []
+cnt = 50
 for ind in initial:
-    pairs.append(([], ind, cnt))
-    cnt += 10
-#print(roulette_selection(pairs), 'Roulette_selection_results')
+    parents.append(([], ind, cnt))
+    cnt += 1
+#print(tournament_selection(parents), 'tournament_selection_results')
+print(roulette_selection(parents), 'Roulette_selection_results')
 for _ in range(100):
-    #print(roulette_selection(pairs), 'Roulette_selection_results')
-    print(tournament_selection(pairs), 'tournament_selection_results')
+    print(tournament_selection(parents), 'tournament_selection_results')
+    print(roulette_selection(parents), 'Roulette_selection_results')
 '''
 
-def serial_SGS_with_activity_lists(activity_list: list, rcpsp: list, resource_capacity: int):
-    schedule = {activity_list[0]: 0} # finish time for corresponding sj's
-    finish_time_of_act = 0
+def serial_SGS_for_activity_lists(activity_list: list,
+                                  rcpsp: list, resource_capacity: int
+                                  ):
+    schedule = {activity_list[0]: 0}
+    acts_finish_time = 0
     for act in activity_list[1:len(activity_list)]:
         duration_of_act = rcpsp[act][0]
-        # corresponding finish time
-        acts_predecessors = []
-        active_activities = []
+        predecessors_finish_times = []
+        considered_acts = []
         for pred in rcpsp[act][2]:
-            acts_predecessors.append(schedule[pred])
-        earliest_finish_time_of_act = max(acts_predecessors) + duration_of_act # eventually just delete this one here
-        earliest_start_time_of_act = earliest_finish_time_of_act - duration_of_act
-        possible_start_times = list([earliest_start_time_of_act])
+            predecessors_finish_times.append(schedule[pred])
+        earliest_start_time = max(predecessors_finish_times)
+        possible_start_times = list([earliest_start_time])
         for finish_time in sorted(schedule.values()):
-            if earliest_start_time_of_act < finish_time:
+            if earliest_start_time < finish_time:
                 possible_start_times.append(finish_time)
         for time in possible_start_times:
             free_capacity = True
             if time == possible_start_times[len(possible_start_times) - 1]:
-                finish_time_of_act = time + duration_of_act
+                acts_finish_time = time + duration_of_act
                 break
-            possible_starts = list(range(time, (time + duration_of_act)))
-            time_period = filter(lambda t: t in possible_start_times, possible_starts)
-            for time_instant in time_period:
-                for already_planned_act in schedule.keys():
-                    if ((schedule[already_planned_act] - rcpsp[already_planned_act][0])
-                            <= time_instant < schedule[already_planned_act]):
-                        active_activities.append(already_planned_act)
-                sum_of_resources = 0
-                for active_act in active_activities:
-                    sum_of_resources += rcpsp[active_act][1]
-                free_resources = resource_capacity - sum_of_resources
-                needed_resource_of_act = rcpsp[act][1]
-                active_activities = []
-                if needed_resource_of_act > free_resources:
+            time_period = list(range(time, (time + duration_of_act)))
+            considered_times = filter(
+                lambda t: t in possible_start_times, time_period
+            )
+            for time_instant in considered_times:
+                for planned_act in schedule.keys():
+                    if ((schedule[planned_act] - rcpsp[planned_act][0])
+                            <= time_instant < schedule[planned_act]):
+                        considered_acts.append(planned_act)
+                used_resources = 0
+                for active_act_at_time_instant in considered_acts:
+                    used_resources += rcpsp[active_act_at_time_instant][1]
+                free_resources = resource_capacity - used_resources
+                acts_resource_needs = rcpsp[act][1]
+                considered_acts = []
+                if acts_resource_needs > free_resources:
                     free_capacity = False
             if free_capacity:
-                finish_time_of_act = time + duration_of_act
+                acts_finish_time = time + duration_of_act
                 break
-        schedule.update({act: finish_time_of_act})
-    makespan = schedule[len(rcpsp) - 1] # instead of sum so lesser resources needed
-    print(schedule, activity_list, makespan, "schedule, activity_list and makespan")
-    return schedule, makespan
+        schedule.update({act: acts_finish_time})
+    last_act = len(rcpsp) - 1
+    project_duration = schedule[last_act]
+    return schedule, project_duration
 
-#test_activity_list = [0, 7, 1, 13, 4, 3, 16, 17, 2, 6, 19, 5, 14, 8, 15, 9, 10, 12, 11, 18, 20]
-#print(serial_SGS_with_activity_lists(test_activity_list, dt.BASE_RCPSP, dt.RESOURCE_CAPACITY))
+
+#test_activity_list = random_initial_population(2, RCPSP)[0]
+#print(serial_SGS_for_activity_lists(test_activity_list, RCPSP, RESOURCE_CAPACITY))
 
 def calculate_fitness(genotype: list, rcpsp: list, resource_capacity: int):
-    phenotype, fitness = serial_SGS_with_activity_lists(genotype, rcpsp, resource_capacity)
+    phenotype, fitness = serial_SGS_for_activity_lists(
+        genotype, rcpsp, resource_capacity)
     return phenotype, genotype, fitness
 
-def mutate(mutate_rate: float, not_mutated_genotype: list, rcpsp: list):
-    if mutate_rate == 0:
+def mutation(mutation_prob: float, not_mutated_genotype: list, rcpsp: list):
+    if mutation_prob == 0:
         return not_mutated_genotype
     mutated_genotype = not_mutated_genotype.copy()
-    for act in not_mutated_genotype:
-        if act == 0 or act == len(mutated_genotype) - 1:
+    last_gene = len(mutated_genotype) - 1
+    for allele in not_mutated_genotype:
+        if allele == 0 or allele == last_gene:
             continue
-        p = round(rnd.uniform(0, 1), 3)
-        if p <= mutate_rate:
-            gene1 = mutated_genotype.index(act)
-            # -2 to because last index should not be changeable
-            if gene1 + 1 < len(mutated_genotype) - 1:
-                gene2 = gene1 + 1
-            else:
-                gene2 = gene1 - 1
-            temp_mem = mutated_genotype[gene1]
-            mutated_genotype[gene1] = mutated_genotype[gene2]
-            mutated_genotype[gene2] = temp_mem
-    print(mutated_genotype, 'Mutated_genotype')
-    print(not_mutated_genotype, 'non_mutated_genotype')
-    print(check_precedessors(mutated_genotype, rcpsp), 'predecessors check')
-    if check_precedessors(mutated_genotype, rcpsp):
-        if not_mutated_genotype != mutated_genotype:
-            print('Successfully_mutation!')
-        else:
-            print('Mutation same as ')
+        gene_mutate_prob = round(rnd.uniform(0, 1), 2)
+        if gene_mutate_prob <= mutation_prob:
+            gene = mutated_genotype.index(allele)
+            next_gene = gene + 1
+            if next_gene < last_gene - 1:
+                temp_allele = mutated_genotype[gene]
+                mutated_genotype[gene] = mutated_genotype[next_gene]
+                mutated_genotype[next_gene] = temp_allele
+    if check_precedessor_constraints(mutated_genotype, rcpsp):
         return mutated_genotype
-    print('No mutation')
     return not_mutated_genotype
 
-def check_precedessors(mutate_list: list, rcpsp: list):
+def check_precedessor_constraints(mutated_genotype: list, rcpsp: list):
     temp = []
-    temp.append(mutate_list[0])
+    temp.append(mutated_genotype[0])
     if temp[0] != 0:
         return False
-    for gene in mutate_list:
+    for gene in mutated_genotype:
         temp.append(gene)
         for pred in rcpsp[gene][2]:
             if pred not in temp:
@@ -279,44 +267,20 @@ def check_precedessors(mutate_list: list, rcpsp: list):
     return True
 
 '''
-test_activity_list = [0, 7, 1, 13, 4, 3, 16, 17, 2, 6, 19, 5, 14, 8, 15, 9, 10, 12, 11, 18, 20]
+test_activity_list = random_initial_population(2, RCPSP)[0]
 for _ in range(20):
-    test_result = mutate(0.1, test_activity_list, dt.BASE_RCPSP)
-    print(test_result)
-    print('')
+    test_result = mutation(0.1, test_activity_list, RCPSP)
 '''
 
-def replace(children_pop: list, parents_with_fitness: list, rcpsp: list, pop_size: int, resource_cap: int, elitism_amount: int):
-    childrens_pop_size = len(children_pop)
-    children_with_fitness = []
-    for genotype in children_pop:
-        children_with_fitness.append(calculate_fitness(genotype, rcpsp, resource_cap))
-    child_list = sorted(children_with_fitness, key=lambda x: x[2])
-    parents_list = sorted(parents_with_fitness, key=lambda x: x[2])
-    print(elitism_amount, 'elitism before')
-    new_population = []
-
-    print(elitism_amount, 'elitism amount and needed minimum:', pop_size - childrens_pop_size)
-    if elitism_amount < pop_size - childrens_pop_size:
-        elitism_amount = pop_size - childrens_pop_size
-
-    print(elitism_amount, 'elitism afterwards')
-    pop_size -= elitism_amount
-
-    for individual_with_fitness in parents_list:
-        new_population.append(individual_with_fitness)
-        elitism_amount -= 1
-        if elitism_amount == 0:
-            break
-
-    print('Pop size: ', pop_size)
-
-    for individual_with_fitness in child_list:
-        new_population.append(individual_with_fitness)
-        pop_size -= 1
-        if pop_size == 0:
-            break
-
-    print('Pop after: ', len(new_population))
-    individuals_with_fitness = sorted(new_population, key=lambda x: x[2])
-    return individuals_with_fitness
+def replacement(offspring_pop: list, parents_pop: list, elites_amount: int):
+    offspring_pop_size = len(offspring_pop)
+    best_offsprings_amount = offspring_pop_size - elites_amount
+    sorted_parents_pop = sorted(parents_pop, key=lambda x: x[2])
+    sorted_offspring_pop = sorted(offspring_pop, key=lambda x: x[2])
+    new_parents_pop = []
+    elites = sorted_parents_pop[0:elites_amount]
+    new_parents_pop += elites
+    best_offsprings = sorted_offspring_pop[0:best_offsprings_amount]
+    new_parents_pop += best_offsprings
+    new_parents_pop = sorted(new_parents_pop, key=lambda x: x[2])
+    return new_parents_pop
