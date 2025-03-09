@@ -1,14 +1,14 @@
-import random as rnd
-import time
 import genetic_algorithm as ga
 from dataset import RCPSP, RESOURCE_CAPACITY
+import time
+import random as rnd
 rnd.seed(10)
 
 
-def genetic_algorithm(sel_type: str, cross_type: str,
-                          pop_size: int, recomb_prob: float,
-                          mutation_prob: float, initial_pop: list
-                          ):
+def start_genetic_algorithm(sel_type: str, recomb_type: str,
+                            pop_size: int, recomb_prob: float,
+                            mutation_prob: float, initial_pop: list
+                            ):
     start_time = time.process_time()
     initial_pop = initial_pop.copy()
     no_improvements_counter = 0
@@ -17,78 +17,65 @@ def genetic_algorithm(sel_type: str, cross_type: str,
     pop = []
     elites_amount = pop_size // 5
     MAX_GENERATIONS = 100
-    GENERATIONS_UNTIL_CONVERGENCE = MAX_GENERATIONS // 5
-
+    CONVERGENCE = MAX_GENERATIONS // 5
     for genotype in initial_pop:
         pop.append(ga.calculate_fitness(genotype, RCPSP, RESOURCE_CAPACITY))
-
     for generation in range(MAX_GENERATIONS):
-        if no_improvements_counter == GENERATIONS_UNTIL_CONVERGENCE:
-            break
         temp_offspring_pop = []
-        pool = ga.selection(sel_type, pop)
+        pool = ga.select(sel_type, pop)
         for parents in range(pop_size // 2):
             parents_recomb_prob = round(rnd.uniform(0, 1), 1)
             parent1, parent2 = pool[parents][0], pool[parents][1]
             if parents_recomb_prob <= recomb_prob:
-                offspring1, offspring2 = ga.crossover(
-                    cross_type, parent1, parent2
-                )
+                offspring1, offspring2 = ga.recombine(
+                    recomb_type, parent1, parent2)
             else:
                 offspring1, offspring2 = parent1, parent2
-            offspring1 = ga.mutation(mutation_prob, offspring1, RCPSP)
-            offspring2 = ga.mutation(mutation_prob, offspring2, RCPSP)
+            offspring1 = ga.mutate(mutation_prob, offspring1, RCPSP)
+            offspring2 = ga.mutate(mutation_prob, offspring2, RCPSP)
             temp_offspring_pop.append(offspring1)
             temp_offspring_pop.append(offspring2)
         offspring_pop = []
         for genotype in temp_offspring_pop:
             offspring_pop.append(ga.calculate_fitness(
-                genotype, RCPSP, RESOURCE_CAPACITY)
-            )
-        pop = ga.replacement(offspring_pop, pop, elites_amount)
+                genotype, RCPSP, RESOURCE_CAPACITY))
+        pop = ga.replace(offspring_pop, pop, elites_amount)
         if pop[0][2] == best_fitness:
             no_improvements_counter += 1
         else:
             no_improvements_counter = 0
             best_fitness = pop[0][2]
+        if no_improvements_counter == CONVERGENCE:
+            break
     generation += 1
-    cpu_time = time.process_time() - start_time
+    dec_place = 4
+    cpu_time = round(time.process_time() - start_time, dec_place)
     # minimal project duration, generation, cpu_time and min schedule
     return pop[0][2], generation, cpu_time, pop[0][0]
 
 
-def run_test_scenarios():
-    pop_sizes = [50, 100]
-    recomb_probs = [0.6, 0.9]
-    mutation_probs = [0.03, 0.07]
-
-    if any(value < 2 or 100 < value or value % 2 != 0 for value in pop_sizes):
-        raise ValueError('Choose even population sizes between 2 and 100')
-    if any(value < 0 or 1 < value for value in recomb_probs):
-        raise ValueError('Choose recombination probabilities between 0 and 1')
-    if any(value < 0 or 1 < value for value in mutation_probs):
-        raise ValueError('Choose mutation probabilities between 0 and 1')
-    if any(len(x) == 0 for x in [pop_sizes, recomb_probs, mutation_probs]):
-        raise IndexError('Parameter lists should not be empty')
-
+def test_scenarios():
+    pop_sizes = [50, 60]
+    recomb_probs = [0.7, 0.9]
+    mutation_probs = [0.05, 0.1]
+    print('Program has been started.\n'
+          'Please wait until the results will be shown.\n')
     par_combs = []
     for ps in pop_sizes:
         for rp in recomb_probs:
             for mp in mutation_probs:
                 par_combs.append([ps, rp, mp])
-
     comb1, comb2, comb3, comb4 = [], [], [], []
     for pc in par_combs:
-        init_pop = ga.random_initial_population(pc[0], RCPSP)
-        comb1.append(genetic_algorithm(
+        init_pop = ga.generate_initial_population(pc[0], RCPSP)
+        comb1.append(start_genetic_algorithm(
             'tournament', 'one_point', pc[0], pc[1], pc[2], init_pop))
-        comb2.append(genetic_algorithm(
+        comb2.append(start_genetic_algorithm(
             'tournament', 'uniform', pc[0], pc[1], pc[2], init_pop))
-        comb3.append(genetic_algorithm(
+        comb3.append(start_genetic_algorithm(
             'roulette', 'one_point', pc[0], pc[1], pc[2], init_pop))
-        comb4.append(genetic_algorithm(
+        comb4.append(start_genetic_algorithm(
             'roulette', 'uniform', pc[0], pc[1], pc[2], init_pop))
-
     results = [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]]
     for pc in range(len(par_combs)):
         for index in range(3):
@@ -96,17 +83,15 @@ def run_test_scenarios():
             results[1][index] += comb2[pc][index]
             results[2][index] += comb3[pc][index]
             results[3][index] += comb4[pc][index]
-
-    print('All_results', results)
     all_combs = comb1 + comb2 + comb3 + comb4
-    min_schedule = sorted(all_combs, key=lambda x: x[0])[0][3]
-    print('Minimal Schedule: ', min_schedule, '\n')
-
+    best_result = sorted(all_combs, key=lambda x: (x[0], x[1], x[2]))[0]
+    print('Best single result: ', best_result[0:3])
+    print('Minimal schedule: ', best_result[3], '\n')
     all_combs = [comb1, comb2, comb3, comb4]
-    operator_comb = ['Tournament AND One-Point', 'Tournament AND Uniform',
-                     'Roulette AND One-Point', 'Roulette AND Uniform']
+    operator_comb = ['Tournament and One-Point', 'Tournament and Uniform',
+                     'Roulette and One-Point', 'Roulette and Uniform']
     combs_amount = len(all_combs)
-
+    dec_point = 4
     for comb_numb in range(combs_amount):
         print(f'{operator_comb[comb_numb]}',
               '\nAvg Minimal Project Duration: ',
@@ -114,9 +99,8 @@ def run_test_scenarios():
               '\nAvg Generations\t: ',
               results[comb_numb][1] / len(par_combs),
               '\nAvg CPU-Time\t: ',
-              round(results[comb_numb][2] / len(par_combs), 4),
-              '\n', list(map(lambda x: x[0:3], all_combs[comb_numb])), '\n'
-              )
+              round(results[comb_numb][2] / len(par_combs), dec_point),
+              '\n', list(map(lambda x: x[0:3], all_combs[comb_numb])), '\n')
 
 
-run_test_scenarios()
+test_scenarios()
