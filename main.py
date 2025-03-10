@@ -51,7 +51,7 @@ def start_genetic_algorithm(sel_type: str, recomb_type: str,
     generation += 1
     dec_place = 4
     cpu_time = round(time.process_time() - start_time, dec_place)
-    # minimal project duration, generation, cpu_time and min schedule
+    # minimal project duration, generation, CPU time and min schedule
     return pop[0][2], generation, cpu_time, pop[0][0]
 
 
@@ -99,38 +99,10 @@ def test_scenarios():
               results[comb_numb][0] / len(par_combs),
               '\nAvg Generations\t: ',
               results[comb_numb][1] / len(par_combs),
-              '\nAvg CPU-Time\t: ',
+              '\nAvg CPU Time\t: ',
               round(results[comb_numb][2] / len(par_combs), dec_point),
               '\n', list(map(lambda x: x[0:3], all_combs[comb_numb])), '\n')
 
 
 test_scenarios()
 
-'''
-Best single result:  (48, 27, 1.0)
-Minimal schedule:  {0: 0, 3: 8, 4: 2, 9: 4, 1: 6, 2: 9, 5: 13, 10: 12, 6: 13, 11: 15, 8: 22, 7: 25, 15: 27, 16: 20, 14: 32, 13: 35, 17: 30, 20: 37, 21: 33, 12: 36, 18: 42, 26: 39, 25: 40, 28: 44, 19: 43, 24: 48, 23: 48, 22: 44, 27: 48, 29: 48} 
-
-Tournament and One-Point 
-Avg Minimal Project Duration:  48.5 
-Avg Generations	:  30.25 
-Avg CPU-Time	:  0.7617 
- [(49, 28, 0.7188), (48, 27, 1.0), (48, 31, 0.7969), (48, 32, 0.7656), (48, 39, 0.9062), (49, 29, 0.625), (49, 30, 0.9219), (49, 26, 0.3594)] 
-
-Tournament and Uniform 
-Avg Minimal Project Duration:  49.0 
-Avg Generations	:  29.375 
-Avg CPU-Time	:  0.791 
- [(49, 25, 0.8594), (49, 28, 1.0781), (50, 27, 0.7188), (49, 40, 1.1875), (49, 22, 0.5469), (49, 26, 0.5156), (49, 31, 0.7344), (48, 36, 0.6875)] 
-
-Roulette and One-Point 
-Avg Minimal Project Duration:  49.0 
-Avg Generations	:  28.375 
-Avg CPU-Time	:  0.6973 
- [(49, 32, 1.1719), (49, 27, 0.875), (49, 31, 0.75), (49, 23, 0.5625), (49, 24, 0.5469), (49, 29, 0.4531), (49, 35, 0.6875), (49, 26, 0.5312)] 
-
-Roulette and Uniform 
-Avg Minimal Project Duration:  49.375 
-Avg Generations	:  29.125 
-Avg CPU-Time	:  0.7891 
- [(49, 31, 1.1562), (49, 37, 0.9688), (50, 28, 0.7812), (50, 24, 0.4844), (48, 38, 0.9688), (50, 26, 0.5781), (50, 22, 0.5625), (49, 27, 0.8125)] 
-'''
