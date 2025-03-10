@@ -169,14 +169,13 @@ def check_predecessor_constraints(mutated_genotype: list, rcpsp: list):
 
 
 def replace(offspring_pop: list, parents_pop: list, elites_amount: int):
+    elites = parents_pop[0:elites_amount]
+    sorted_offspring_pop = sorted(offspring_pop, key=lambda x: x[2])
     offspring_pop_size = len(offspring_pop)
     best_offsprings_amount = offspring_pop_size - elites_amount
-    sorted_parents_pop = sorted(parents_pop, key=lambda x: x[2])
-    sorted_offspring_pop = sorted(offspring_pop, key=lambda x: x[2])
-    new_parents_pop = []
-    elites = sorted_parents_pop[0:elites_amount]
-    new_parents_pop += elites
     best_offsprings = sorted_offspring_pop[0:best_offsprings_amount]
+    new_parents_pop = []
     new_parents_pop += best_offsprings
+    new_parents_pop += elites
     new_parents_pop = sorted(new_parents_pop, key=lambda x: x[2])
     return new_parents_pop
