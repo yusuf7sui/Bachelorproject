@@ -2,6 +2,7 @@ import genetic_algorithm as ga
 from dataset import RCPSP, RESOURCE_CAPACITY
 import time
 import random as rnd
+
 rnd.seed(10)
 
 
@@ -59,8 +60,6 @@ def test_scenarios():
     pop_sizes = [50, 60]
     recomb_probs = [0.7, 0.9]
     mutation_probs = [0.05, 0.1]
-    print('Program has been started.\n'
-          'Please wait until the results will be shown.\n')
     par_combs = []
     for ps in pop_sizes:
         for rp in recomb_probs:
@@ -86,13 +85,14 @@ def test_scenarios():
             results[3][index] += comb4[pc][index]
     all_combs = comb1 + comb2 + comb3 + comb4
     best_result = sorted(all_combs, key=lambda x: (x[0], x[1], x[2]))[0]
-    print('Best single result: ', best_result[0:3])
+    print('Best result: ', best_result[0:3])
     print('Minimal schedule: ', best_result[3], '\n')
     all_combs = [comb1, comb2, comb3, comb4]
     operator_comb = ['Tournament and One-Point', 'Tournament and Uniform',
                      'Roulette and One-Point', 'Roulette and Uniform']
     combs_amount = len(all_combs)
     dec_point = 4
+    print('Order of parameter combinations: ', par_combs, '\n')
     for comb_numb in range(combs_amount):
         print(f'{operator_comb[comb_numb]}',
               '\nAvg Minimal Project Duration: ',
@@ -101,8 +101,10 @@ def test_scenarios():
               results[comb_numb][1] / len(par_combs),
               '\nAvg CPU Time\t: ',
               round(results[comb_numb][2] / len(par_combs), dec_point),
-              '\n', list(map(lambda x: x[0:3], all_combs[comb_numb])), '\n')
+              '\nResults for each parameter combination\t:',
+              list(map(lambda x: x[0:3], all_combs[comb_numb])), '\n')
 
 
+print('Program has been started.\n'
+      'Please wait until the results will be shown.\n')
 test_scenarios()
-
